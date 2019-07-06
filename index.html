@@ -5,5 +5,51 @@
 		<title></title>
 	</head>
 	<body>
+    <div id="wrap">
+      
+    </div>
+    <style>
+      *{padding:0;margin:0}
+      html,body,#wrap{width:100%;height:100%;}
+    </style>
+    <script>
+    var initParams={
+      clientW:0,
+      clientH:0
+    }
+    var planOwnParams={
+      width:100,
+      height:100,
+      color:'red'
+    }
+    function init(){
+      creatPlane()
+    }
+    init()
+    
+    function creatPlane(){
+      var plane=document.createElement('div');
+      plane.id='ownPlane';
+      plane.style.width=planOwnParams.width+'px';
+      plane.style.height=planOwnParams.height+'px';
+      plane.style.background=planOwnParams.color;
+      plane.style.position='absolute';
+      plane.style.left=document.getElementsByTagName('body')[0].clientWidth/2-(planOwnParams.width/2)+'px'
+      plane.style.bottom=0
+      document.getElementById('wrap').appendChild(plane)
+    }
+    var ownObj=document.getElementById('ownPlane');
+     document.addEventListener('touchmove', function(){
+     var touch = event.targetTouches[0];
+
+      var y = touch.pageY;
+  var x = touch.pageX;
+     ownObj.style.left= x+'px'
+     ownObj.style.left=y+'px'
+   });
+    
+    
+   
+    </script>
 	</body>
 </html>

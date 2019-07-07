@@ -13,43 +13,128 @@
       html,body,#wrap{width:100%;height:100%;}
     </style>
     <script>
-    var initParams={
-      clientW:0,
-      clientH:0
+    var wrap=document.getElementById("wrap");
+    var wrapW=wrap.clientWidth
+    var wrapH=wrap.clientHeight
+    //随机数生成
+    function randomNum(startNum,endNum){
+      return Math.random(startNum,endNum)*((endNum+1-startNum)+startNum)
     }
-    var planOwnParams={
-      width:100,
-      height:100,
-      color:'red'
+    //飞机类
+    function Plan(poX,poY,sizeX,sizeY,color){
+      this.width=sizeX;
+      this.height=sizeY;
+      this.planeNode=document.createElement('div');
+      this.planeNode.style.position='absolute';
+      this.planeNode.style.width=sizeX+'px';
+      this.planeNode.style.height=sizeY+'px';
+      this.planeNode.style.left=(poX/2-sizeX)+'px';
+      this.planeNode.style.bottom=(poY/2-sizeY)+'px';
+      this.planeNode.style.background=color;
+      wrap.appendChild(this.planeNode);
     }
-    function init(){
-      creatPlane()
-    }
-    init()
     
-    function creatPlane(){
-      var plane=document.createElement('div');
-      plane.id='ownPlane';
-      plane.style.width=planOwnParams.width+'px';
-      plane.style.height=planOwnParams.height+'px';
-      plane.style.background=planOwnParams.color;
-      plane.style.position='absolute';
-      plane.style.left=document.getElementsByTagName('body')[0].clientWidth/2-(planOwnParams.width/2)+'px'
-      plane.style.bottom=0
-      document.getElementById('wrap').appendChild(plane)
+    //自己飞机类
+    function SelfPlan(){
+       Plan.call(this,wrapW,wrapH,100,100,'red')
+       this.planeNode.id='our'
     }
-    var ownObj=document.getElementById('ownPlane');
-     document.addEventListener('touchmove', function(){
-     var touch = event.targetTouches[0];
+    // 己方飞机
+    var ownPlan=new SelfPlan();
+    var ourNode=document.getElementById('our')
+    //己方移动
+    var ownMove=function(){
+      var e=event||window.event;
+      var ownplanX=e.clientX;
+      var ownplanY=e.clientY;
+      ourNode.style.left=ownplanX-ownPlan.width/2+"px";
+      ourNode.style.top=ownplanY-ownPlan.height/2+"px";
+    }
+    //敌方飞机类
+    function EnemyPlan(){
+      Plan.call(this,(randomNum(20,wrapW*2)),wrapH*2,50,50,'blue')
+      this.planeNode.className='EnemyPlan';
+      //敌方飞机移动
+      this.enemyMove=function(){
+        if(this.planeNode.offsetTop+100>=wrapH){
+          this.planeNode.remove()
+        }
+        this.planeNode.style.top=this.planeNode.offsetTop+10+"px";
+      }
+       
+    }
+    //敌方飞机
+    var enemyPlayArr=[];
+    setInterval(function(){
+      enemyPlayArr.push(new EnemyPlan())
+    },500)
+    //子弹类
+    function Bullet(speed,sizeX,sizeY,PL,PT,color){
+      this.speed=speed;
+      this.width=sizeX+'px';
+      this.height=sizeY+'px';
+      this.bulletNode=document.createElement('div');
+      this.bulletNode.style.position='absolute';
+      this.bulletNode.style.width=this.width;
+      this.bulletNode.style.height=this.height;
+      this.bulletNode.style.left=PL+ownPlan.width/2-sizeX/2+'px';
+      this.bulletNode.style.top=PT+'px';
+      this.bulletNode.style.background=color;
+      wrap.appendChild(this.bulletNode);
+      this.bulletMove=function(){
+        if(this.bulletNode.offsetTop<=0){
+          this.bulletNode.remove()
+        }
+        
+        this.bulletNode.style.top=this.bulletNode.offsetTop-this.speed+"px";
+      }
+    }
+    //鼠标事件
+    if(document.addEventListener){
+      wrap.addEventListener("mousemove",ownMove,true);
+    }else if(document.attachEvent){
+      wrap.attachEvent("onmousemove",ownMove);
+    }
+    //己方子弹
+    var bulletArr=[]
+    //敌方子弹
+    var EnemybulletArr=[]
+    //碰撞检测
+    var collisionD=function(bullertArr,enemyPlayArr){
+       for(var n=0;n<bullertArr.length;n++){
+         
+          for(var j=0;j<enemyPlayArr.length;j++){
+            var bullertT=bullertArr[n].bulletNode.offsetTop;
+            var bullertL=bullertArr[n].bulletNode.offsetLeft;
+            var enemyPlayT=enemyPlayArr[j].planeNode.offsetTop;
+            var enemyPlayL=enemyPlayArr[j].planeNode.offsetLeft;
+            if(bullertL>=enemyPlayL&&bullertL<=(enemyPlayL+enemyPlayArr[j].width)&&bullertT>=enemyPlayT&&bullertT<=(enemyPlayT+enemyPlayArr[j].height)){
+                enemyPlayArr[j].planeNode.remove()
+                 enemyPlayArr.splice(j,1)
+                bullertArr[n].bulletNode.remove()
+                 bullertArr.splice(n,1)
+            }
+          }
+       } 
+    }
+    function start(){
+      var bulletStartL=ourNode.offsetLeft;
+      var bulletStartT=ourNode.offsetTop;
+      bulletArr.push(new Bullet(40,10,20,bulletStartL,bulletStartT,'#f7f20ad6'))
+      for(var n=0;n<bulletArr.length;n++){
 
-      var y = touch.pageY;
-  var x = touch.pageX;
-     ownObj.style.left= x+'px'
-     ownObj.style.left=y+'px'
-   });
-    
-    
-   
+        bulletArr[n].bulletMove()
+      }
+      for(var j=0;j<enemyPlayArr.length;j++){
+        enemyPlayArr[j].enemyMove()
+      }
+       
+      setInterval(collisionD(bulletArr,enemyPlayArr),50)
+    }
+
+
+    setInterval(start,100)
+  
     </script>
 	</body>
 </html>
